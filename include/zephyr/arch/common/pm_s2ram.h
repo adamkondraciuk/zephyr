@@ -65,6 +65,9 @@ int arch_pm_s2ram_suspend(pm_s2ram_system_off_fn_t system_off);
  *
  * Default implementation is setting a magic word in RAM. CONFIG_PM_S2RAM_CUSTOM_MARKING
  * allows custom implementation.
+ * The following requirements must be fulfilled:
+ * - the function cannot use stack (asm function or function with 'naked' attribute)
+ *
  */
 void pm_s2ram_mark_set(void);
 
