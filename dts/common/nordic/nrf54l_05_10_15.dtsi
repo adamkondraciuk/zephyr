@@ -553,6 +553,7 @@
 				compatible = "nordic,nrf-grtc";
 				reg = <0xe2000 0x1000>;
 				cc-num = <12>;
+				clocks = <&lfxo>;
 				status = "disabled";
 			};
 
