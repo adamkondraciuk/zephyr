@@ -10,6 +10,7 @@
 #if defined(CONFIG_CLOCK_CONTROL_NRF)
 #include <zephyr/drivers/clock_control/nrf_clock_control.h>
 #endif
+#include <zephyr/drivers/pinctrl.h>
 #include <zephyr/drivers/timer/system_timer.h>
 #include <zephyr/drivers/timer/nrf_grtc_timer.h>
 #include <nrfx_grtc.h>
@@ -518,7 +519,32 @@ static int sys_clock_driver_init(void)
 #if defined(CONFIG_NRF_GRTC_ALWAYS_ON)
 	nrfx_grtc_active_request_set(true);
 #endif
+
+#if DT_NODE_HAS_PROP(GRTC_NODE, clkout_32k)
+	nrfy_grtc_clkout_set(NRF_GRTC, NRF_GRTC_CLKOUT_32K, true);
+#endif
+
+#if DT_NODE_HAS_PROP(GRTC_NODE, clkout_fast_frequency)
+#if DT_PROP(GRTC_NODE, clkout_fast_frequency) > (DT_PROP(GRTC_NODE, base_frequency) / 2)
+#error "Invalid frequency value for fast clock output."
+#endif
+	uint32_t base_frequency = DT_PROP(GRTC_NODE, base_frequency);
+	uint32_t requested_frequency = DT_PROP(GRTC_NODE, clkout_fast_frequency);
+	uint32_t grtc_div = base_frequency / (requested_frequency * 2);
+
+	nrfy_grtc_clkout_set(NRF_GRTC, NRF_GRTC_CLKOUT_FAST, true);
+	nrfy_grtc_clkout_divider_set(NRF_GRTC, (uint8_t)grtc_div);
+#endif
+
+#if DT_NODE_HAS_PROP(GRTC_NODE, clkout_32k_frequency) ||                                           \
+	DT_NODE_HAS_PROP(GRTC_NODE, clkout_fast_frequency)
+	PINCTRL_DT_DEFINE(GRTC_NODE);
+	const struct pinctrl_dev_config *pcfg = PINCTRL_DT_DEV_CONFIG_GET(GRTC_NODE);
+
+	return pinctrl_apply_state(pcfg, PINCTRL_STATE_DEFAULT);
+#else
 	return 0;
+#endif
 }
 
 void sys_clock_set_timeout(int32_t ticks, bool idle)
