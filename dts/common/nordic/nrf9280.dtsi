@@ -768,6 +768,7 @@
 				compatible = "nordic,nrf-grtc";
 				reg = <0x99c000 0x1000>;
 				status = "disabled";
+				clocks = <&lfclk>, <&fll16m>;
 				cc-num = <16>;
 			};
 

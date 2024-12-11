@@ -528,6 +528,11 @@ static int sys_clock_driver_init(void)
 #if DT_PROP(GRTC_NODE, clkout_fast_frequency) > (DT_PROP(GRTC_NODE, base_frequency) / 2)
 #error "Invalid frequency value for fast clock output."
 #endif
+#if DT_NODE_HAS_STATUS_OKAY(DT_PHANDLE_BY_IDX(GRTC_NODE, clocks, 1)) && \
+    DT_PROP(DT_PHANDLE_BY_IDX(GRTC_NODE, clocks, 1), clock_frequency) != 8000000
+#error "Invalid frequency value for slow clock output."
+#endif
+
 	uint32_t base_frequency = DT_PROP(GRTC_NODE, base_frequency);
 	uint32_t requested_frequency = DT_PROP(GRTC_NODE, clkout_fast_frequency);
 	uint32_t grtc_div = base_frequency / (requested_frequency * 2);

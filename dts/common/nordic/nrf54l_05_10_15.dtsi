@@ -65,6 +65,12 @@
 			#clock-cells = <0>;
 			clock-frequency = <DT_FREQ_M(128)>;
 		};
+
+		pclk: pclk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <DT_FREQ_M(16)>;
+		}
 	};
 
 	soc {
@@ -553,7 +559,7 @@
 				compatible = "nordic,nrf-grtc";
 				reg = <0xe2000 0x1000>;
 				cc-num = <12>;
-				clocks = <&lfxo>;
+				clocks = <&lfxo>, <&pclk>;
 				status = "disabled";
 			};
 
