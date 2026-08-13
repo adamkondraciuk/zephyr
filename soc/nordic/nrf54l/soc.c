@@ -34,6 +34,7 @@ LOG_MODULE_REGISTER(soc, CONFIG_SOC_LOG_LEVEL);
 #include <hal/nrf_power.h>
 #include <hal/nrf_regulators.h>
 #include <zephyr/dt-bindings/regulator/nrf5x.h>
+#include <hal/nrf_gpio.h>
 
 #define LFXO_NODE DT_NODELABEL(lfxo)
 #define HFXO_NODE DT_NODELABEL(hfxo)
@@ -166,8 +167,14 @@ static inline void power_and_clock_configuration(void)
 }
 #endif /* NRF_APPLICATION && !CONFIG_TRUSTED_EXECUTION_NONSECURE */
 
+uint32_t gpio_masks[GPIO_COUNT];
+
 int nordicsemi_nrf54l_init(void)
 {
+	
+	nrf_gpio_latches_read_and_clear(0, GPIO_COUNT, gpio_masks);
+	nrf_gpio_latches_read(0, GPIO_COUNT, gpio_masks);
+
 	/* Update the SystemCoreClock global variable with current core clock
 	 * retrieved from the DT.
 	 */

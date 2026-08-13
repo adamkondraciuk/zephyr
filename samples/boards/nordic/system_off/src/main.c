@@ -18,6 +18,7 @@
 #include <zephyr/sys/poweroff.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/drivers/timer/system_timer.h>
+#include <hal/nrf_gpio.h>
 
 #define NON_WAKEUP_RESET_REASON (RESET_PIN | RESET_SOFTWARE | RESET_POR | RESET_DEBUG)
 
@@ -27,10 +28,13 @@
 #endif
 #if defined(CONFIG_GPIO_WAKEUP_ENABLE)
 static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+static const struct gpio_dt_spec sw3 = GPIO_DT_SPEC_GET(DT_ALIAS(sw3), gpios);
 #endif
 #if defined(CONFIG_LPCOMP_WAKEUP_ENABLE)
 static const struct device *comp_dev = DEVICE_DT_GET(DT_NODELABEL(comp));
 #endif
+
+extern uint32_t gpio_masks[GPIO_COUNT];
 
 int print_reset_cause(uint32_t reset_cause)
 {
@@ -97,6 +101,9 @@ int main(void)
 	} else {
 		printf("Retained data not supported\n");
 	}
+    printf("P0->LATCH1: %08X\n", gpio_masks[0]);
+    printf("P1->LATCH0: %08X\n", gpio_masks[1]);
+
 
 #if defined(CONFIG_SYS_CLOCK_DISABLE)
 	printf("System clock will be disabled\n");
@@ -119,11 +126,25 @@ int main(void)
 		return 0;
 	}
 
+    /* configure sw3 as input, interrupt as level active to allow wake-up */
+    rc = gpio_pin_configure_dt(&sw3, GPIO_INPUT);
+    if (rc < 0) {
+            printf("Could not configure sw3 GPIO (%d)\n", rc);
+            return 0;
+    }
+
 	rc = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_LEVEL_ACTIVE);
 	if (rc < 0) {
 		printf("Could not configure sw0 GPIO interrupt (%d)\n", rc);
 		return 0;
 	}
+
+    rc = gpio_pin_interrupt_configure_dt(&sw3, GPIO_INT_LEVEL_ACTIVE);
+    if (rc < 0) {
+            printf("Could not configure sw3 GPIO interrupt (%d)\n", rc);
+            return 0;
+    }
+
 
 	printf("Entering system off; press sw0 to restart\n");
 #endif
